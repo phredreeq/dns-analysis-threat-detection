@@ -1,9 +1,9 @@
-# 🌐 DNS Analysis & Threat Detection Using Splunk
+# DNS Analysis & Threat Detection Using Splunk
 ## Detecting DNS Tunneling and DGA Malware Activity
 
 ---
 
-## 📌 Problem
+## Problem
 DNS is one of the most abused protocols in cybersecurity.
 Because firewalls rarely block DNS traffic, attackers 
 exploit it to hide malicious activity including data 
@@ -13,7 +13,7 @@ DNS Tunneling and Domain Generation Algorithm (DGA) malware.
 
 ---
 
-## 🎯 Objectives
+## Objectives
 - Simulate realistic DNS logs including normal and
   malicious traffic patterns
 - Detect DNS tunneling using query length analysis
@@ -22,7 +22,7 @@ DNS Tunneling and Domain Generation Algorithm (DGA) malware.
 
 ---
 
-## 🛠️ Tools Used
+## Tools Used
 | Tool | Purpose |
 |---|---|
 | **Splunk** | SIEM platform for log analysis |
@@ -32,7 +32,7 @@ DNS Tunneling and Domain Generation Algorithm (DGA) malware.
 
 ---
 
-## 🧠 Attack Background
+## Attack Background
 
 ### What is DNS?
 DNS (Domain Name System) translates human-readable
@@ -52,15 +52,14 @@ Attackers hide stolen data inside DNS queries:
 - Traffic looks like normal DNS to firewalls
 
 ### Domain Generation Algorithm (DGA)
-Malware generates random domain names to find
-attacker-controlled servers:
+Malware generates random domain names to find servers controlled by attacker:
 - Generates hundreds of random domains daily
 - Most return NXDOMAIN (domain doesn't exist)
 - When attacker registers one — malware connects
 
 ---
 
-## 🗃️ Dataset
+## Dataset
 Simulated DNS logs with 180 records:
 
 | Category | Count | Description |
@@ -80,11 +79,12 @@ Simulated DNS logs with 180 records:
 
 ---
 
-## 🔎 Detection Queries (SPL)
+## Detection Queries (SPL)
 
 ### Query 1 — DNS Query Types Distribution
 index=main source="dns_logs.csv"
 | stats count by query_type
+
 Shows distribution of A vs TXT records.
 High TXT count indicates possible tunneling.
 
@@ -95,7 +95,8 @@ avg(query_length) as avg_length
 by source_ip, query_type
 | where avg_length > 40 AND query_type="TXT"
 | sort -avg_length
-Flags IPs with unusually long TXT queries —
+
+Flags IPs with unusually long TXT queries, which is a 
 key indicator of DNS tunneling activity.
 
 ### Query 3 — Detect DGA Malware
@@ -106,6 +107,7 @@ dc(query) as unique_domains
 by source_ip
 | where failed_queries > 10
 | sort -failed_queries
+
 Identifies IPs making many failed queries to
 unique domains — classic DGA malware behaviour.
 
@@ -116,6 +118,7 @@ dc(query) as unique_domains,
 avg(query_length) as avg_length
 by source_ip
 | sort -total_queries
+
 Compares all IPs side by side to identify
 anomalous behaviour patterns.
 
@@ -125,12 +128,13 @@ source_ip="10.0.0.99"
 | table timestamp, query, response_code
 | sort timestamp
 | head 10
+
 Shows actual DGA domain names generated
 by the infected machine.
 
 ---
 
-## 📸 Results
+## Results
 
 ### Query 1 — DNS Query Types
 
@@ -169,7 +173,7 @@ by the infected machine.
 
 ---
 
-## 🧠 Analysis
+## Analysis
 
 ### Finding 1 — DNS Tunneling Confirmed
 IP 10.0.0.55 made 30 TXT record queries with
@@ -180,7 +184,7 @@ through DNS queries.
 
 ### Finding 2 — DGA Malware Confirmed
 IP 10.0.0.99 made 50 queries to 50 completely
-unique random domains — all returning NXDOMAIN.
+unique random domains, with all returning NXDOMAIN.
 Sample domains detected:
 
 | Domain | Response |
@@ -190,12 +194,12 @@ Sample domains detected:
 | edokgyxivvxajstdoz.org | NXDOMAIN |
 | ucfsdibpuoyozpnqyec.org | NXDOMAIN |
 
-No human generates domains like these — this
+No human generates domains like these, this
 is 100% automated malware behaviour.
 
 ### Finding 3 — Normal IPs Identified
 IPs 10.0.0.5, 10.0.0.8 and 10.0.0.12 showed
-normal behaviour — querying 8-9 unique known
+normal behaviour - querying 8-9 unique known
 domains with average lengths of 17-22 characters.
 
 ### Finding 4 — Protocol Abuse
@@ -206,7 +210,7 @@ Both attacks exploited DNS because:
 
 ---
 
-## ⚠️ DNS Attack Comparison
+## DNS Attack Comparison
 
 | Attack | Indicator | Detection Method |
 |---|---|---|
@@ -216,7 +220,7 @@ Both attacks exploited DNS because:
 
 ---
 
-## ✅ Conclusion & Recommendations
+## Conclusion & Recommendations
 
 ### Immediate Actions
 | Priority | Action |
